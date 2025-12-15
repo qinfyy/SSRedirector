@@ -4,27 +4,6 @@
 #include "FileWriter.h"
 #include <chrono>
 
-//void* get_ClientPublishChannelName_Hook(void* method) {
-//    auto result = ((Il2CppString * (*)(void*))o_get_ClientPublishChannelName)(method);
-//    DebugPrintLockW(L"[Hook_get_ClientPublishChannelName] %ls\n", Il2cppToWstring(result).c_str());
-//    return result;
-//}
-
-//void* ClientConfig_get_ServerMetaKey_Hook(void* method)
-//{
-//    auto ret = ((Il2CppString * (*)(void*))o_ClientConfig_get_ServerMetaKey)(method);
-//    DebugPrintLockW(L"[ClientConfig_get_ServerMetaKey] %ls\n", Il2cppToWstring(ret).c_str());
-//    return ret;
-//}
-
-//void* ClientConfig_get_ServerGarbleKey_Hook(void* method)
-//{
-//    auto ret = ((Il2CppString * (*)(void*))o_ClientConfig_get_ServerGarbleKey)(method);
-//    DebugPrintLockW(L"[ClientConfig_get_ServerGarbleKey] %ls\n", Il2cppToWstring(ret).c_str());
-//    return ret;
-//}
-
-// HttpNetMsg readMessage(byte[] messageBuffer, int offset, int length)
 HttpNetMsg* readMessage_Hook(
     void* thisPtr,
     Byte__Array* messageBuffer,
@@ -64,7 +43,6 @@ HttpNetMsg* readMessage_Hook(
     return ret;
 }
 
-//bool BuildMessage(HttpNetMsg msg, out byte[] data)
 bool BuildMessage_Hook(
     void* thisPtr,
     HttpNetMsg* msg,

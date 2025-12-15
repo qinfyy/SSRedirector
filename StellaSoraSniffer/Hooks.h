@@ -1,15 +1,8 @@
 ﻿#pragma once
 #include "Util.h"
 
-//inline void* o_get_ClientPublishChannelName = nullptr;
-//inline void* o_ClientConfig_get_ServerMetaKey = nullptr;
-//inline void* o_ClientConfig_get_ServerGarbleKey = nullptr;
 inline void* o_readMessage = nullptr;
 inline void* o_BuildMessage = nullptr;
-
-//void* get_ClientPublishChannelName_Hook(void* method);
-//void* ClientConfig_get_ServerMetaKey_Hook(void* method);
-//void* ClientConfig_get_ServerGarbleKey_Hook(void* method);
 
 HttpNetMsg* readMessage_Hook(
     void* thisPtr,
