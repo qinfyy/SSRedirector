@@ -39,9 +39,6 @@
     <ClInclude Include="Types.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="FileWriter.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Memory.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -66,9 +63,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="HookManager.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="FileWriter.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Memory.cpp">

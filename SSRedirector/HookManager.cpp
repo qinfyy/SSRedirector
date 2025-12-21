@@ -8,30 +8,30 @@
 void InstallHooks() {
     auto base = GetModuleHandleA("GameAssembly.dll");
 
-    uintptr_t bmAddr = Scan(base, "4C 89 44 24 ?? 48 89 4C 24 ?? 53 56 57 41 54 41 55 41 56 41 57 48 81 EC ?? ?? ?? ?? 4D 8B F8 4C 8B E2");
-    uintptr_t rmAddr = Scan(base, "48 89 5C 24 ?? 48 89 74 24 ?? 57 41 56 41 57 48 83 EC ?? 45 8B F1 41 8B F8 48 8B F2 80 3D ?? ?? ?? ?? ??");
+    uintptr_t uw2Addr = Scan(base, "48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC 20 48 8B F2 49 8B F8 33 D2 48 8B D9 E8 ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ??");
+    uintptr_t uw3Addr = Scan(base, "48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 48 8B EA 49 8B F9 33 D2 49 8B F0 48 8B D9 E8 ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ??");
     
-    if (!bmAddr) {
-        DebugPrintA("[ERROR] Failed to find bm.\n");
+    if (!uw2Addr) {
+        DebugPrintA("[ERROR] Failed to find u1.\n");
         return;
     }
 
-    if (!rmAddr) {
-        DebugPrintA("[ERROR] Failed to find rm.\n");
+    if (!uw3Addr) {
+        DebugPrintA("[ERROR] Failed to find u2.\n");
         return;
     }
 
-    DebugPrintA("[INFO] bm: %lx\n", bmAddr);
-    DebugPrintA("[INFO] rm: %lx\n", rmAddr);
+    DebugPrintA("[INFO] uw2: 0x%lX\n", uw2Addr);
+    DebugPrintA("[INFO] uw3: 0x%lX\n", uw3Addr);
 
-    o_readMessage = (void*)(rmAddr);
-    o_BuildMessage = (void*)(bmAddr);
+    o_uw2 = (void*)uw2Addr;
+    o_uw3 = (void*)uw3Addr;
 
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
 
-    DetourAttach(&(PVOID&)o_readMessage, readMessage_Hook);
-    DetourAttach(&(PVOID&)o_BuildMessage, BuildMessage_Hook);
+    DetourAttach(&(PVOID&)o_uw2, uw2_Hook);
+    DetourAttach(&(PVOID&)o_uw3, uw3_Hook);
 
     DetourTransactionCommit();
 
@@ -42,12 +42,13 @@ void UninstallHooks() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
 
-	// here need uninstall hooks
+    // here need uninstall hooks
 
     DetourTransactionCommit();
 }
 
 DWORD WINAPI WaitForGAModule(LPVOID) {
+    DebugPrintLockA("[INFO] SSRedirector, Made by Cyt\n");
     DebugPrintLockA("[INFO] Waiting for GameAssembly.dll...\n");
     while (!GetModuleHandleA("GameAssembly.dll")) Sleep(200);
 

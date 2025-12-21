@@ -1,0 +1,19 @@
+﻿#pragma once
+#include "Util.h"
+
+inline void* o_uw2 = nullptr;
+inline void* o_uw3 = nullptr;
+
+void uw2_Hook(
+    void* tp,
+    Il2CppString* url,
+    void* sm,
+    void* m);
+
+void uw3_Hook(
+    void* tp,
+    Il2CppString* url,
+    void* sm,
+    void* dh,
+    void* uh,
+    void* m);

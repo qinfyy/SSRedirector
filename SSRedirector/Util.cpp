@@ -16,7 +16,10 @@ Il2CppString* CreateIl2CppString(const std::wstring& ws, Il2CppString* original)
     if (!original) return nullptr;
 
     int32_t len = static_cast<int32_t>(ws.size());
-    size_t size = sizeof(Il2CppString) + (len - 1) * sizeof(wchar_t);
+
+    size_t size = sizeof(Il2CppString);
+    if (len > 32)
+        size += (len - 32) * sizeof(wchar_t);
 
     Il2CppString* newStr = (Il2CppString*)malloc(size);
     if (!newStr) return nullptr;
@@ -25,7 +28,7 @@ Il2CppString* CreateIl2CppString(const std::wstring& ws, Il2CppString* original)
     newStr->monitor = nullptr;
     newStr->length = len;
 
-    memcpy(newStr->chars, ws.c_str(), len * sizeof(wchar_t));
+    memcpy(newStr->chars, ws.data(), len * sizeof(wchar_t));
 
     return newStr;
 }
@@ -40,7 +43,7 @@ bool ReplaceIl2CppStringChars(Il2CppString* target, const std::wstring& ws)
     if (ws.size() > capacity)
         return false;
 
-    std::memcpy(target->chars, ws.c_str(), ws.size() * sizeof(wchar_t));
+    std::memcpy(target->chars, ws.data(), ws.size() * sizeof(wchar_t));
 
     if (ws.size() < capacity) {
         std::memset(target->chars + ws.size(), 0, (capacity - ws.size()) * sizeof(wchar_t));
@@ -48,23 +51,4 @@ bool ReplaceIl2CppStringChars(Il2CppString* target, const std::wstring& ws)
 
     target->length = static_cast<int32_t>(ws.size());
     return true;
-}
-
-std::string ByteArrayToHex(const uint8_t* data, size_t len)
-{
-    if (!data || len == 0) return "";
-
-    std::ostringstream oss;
-    oss << std::hex << std::setfill('0');
-    for (size_t i = 0; i < len; ++i)
-    {
-        oss << std::setw(2) << static_cast<int>(data[i]);
-    }
-    return oss.str();
-}
-
-std::string ByteArrayToHex(Byte__Array* arr)
-{
-    if (!arr) return "";
-    return ByteArrayToHex(arr->vector, arr->max_length);
 }
