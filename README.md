@@ -1,1 +1,2 @@
-# StellaSoraSniffer
+# SSRedirector
+SS Game network redirector
