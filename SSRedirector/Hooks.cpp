@@ -4,36 +4,13 @@
 #include <chrono>
 #include <iostream>
 #include <string>
-#include <thread>
 
 bool ProcessIp(std::wstring& oUrl, std::wstring& nUrl) {
-    std::wstring configFilePath = L".\\Config.ini";
-    std::wstring section = L"SSRedirector, Made by Cyt";
-    std::wstring key = L"ServerIP";
-
-    std::wstring defaultIP = L"http://160.202.238.172:1146";
-
-    wchar_t ipBuffer[512] = { 0 };
-    DWORD readLen = GetPrivateProfileString(section.c_str(), key.c_str(), L"", ipBuffer, sizeof(ipBuffer) / sizeof(wchar_t), configFilePath.c_str());
-
-    if (readLen == 0 || ipBuffer[0] == L'\0') {
-        wcscpy_s(ipBuffer, defaultIP.c_str());
-
-        std::wstring sectionCopy = section;
-        std::wstring keyCopy = key;
-        std::wstring valueCopy = ipBuffer;
-        std::wstring pathCopy = configFilePath;
-
-        std::thread([sectionCopy, keyCopy, valueCopy, pathCopy]() {
-            WritePrivateProfileString(sectionCopy.c_str(), keyCopy.c_str(), valueCopy.c_str(), pathCopy.c_str());
-        }).detach();
-    }
-
     if (oUrl.find(L"yostarplat.com") != std::wstring::npos || oUrl.find(L"stellasora.global") != std::wstring::npos ||
         oUrl.find(L"stellasora.kr") != std::wstring::npos || oUrl.find(L"stellasora.jp") != std::wstring::npos ||
         oUrl.find(L"stargazer-games.com") != std::wstring::npos || oUrl.find(L"yostar.cn") != std::wstring::npos)
     {
-        nUrl = ipBuffer;
+        nUrl = g_ServerIP;
         size_t pos = oUrl.find(L'/', oUrl.find(L"://") + 3);
         if (pos != std::wstring::npos) {
             nUrl += oUrl.substr(pos);

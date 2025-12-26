@@ -24,8 +24,8 @@ void InstallHooks() {
     DebugPrintA("[INFO] uw2: 0x%lX\n", uw2Addr);
     DebugPrintA("[INFO] uw3: 0x%lX\n", uw3Addr);
 
-    o_uw2 = (void*)uw2Addr;
-    o_uw3 = (void*)uw3Addr;
+    o_uw2 = (PVOID)uw2Addr;
+    o_uw3 = (PVOID)uw3Addr;
 
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
@@ -47,12 +47,31 @@ void UninstallHooks() {
     DetourTransactionCommit();
 }
 
+void InitServerIP() {
+    std::wstring configFilePath = L".\\Config.ini";
+    std::wstring section = L"SSRedirector, Made by Cyt";
+    std::wstring key = L"ServerIP";
+    std::wstring defaultIP = L"http://160.202.238.172:1146";
+
+    wchar_t buffer[512] = { 0 };
+	DWORD bufferSize = sizeof(buffer) / sizeof(wchar_t);
+    DWORD readLen = GetPrivateProfileString(section.c_str(), key.c_str(), L"", buffer, bufferSize, configFilePath.c_str());
+
+    if (readLen == 0 || buffer[0] == L'\0') {
+        g_ServerIP = defaultIP;
+        WritePrivateProfileString(section.c_str(), key.c_str(), g_ServerIP.c_str(), configFilePath.c_str());
+    } else {
+        g_ServerIP = buffer;
+    }
+}
+
 DWORD WINAPI WaitForGAModule(LPVOID) {
     DebugPrintLockA("[INFO] SSRedirector, Made by Cyt\n");
     DebugPrintLockA("[INFO] Waiting for GameAssembly.dll...\n");
     while (!GetModuleHandleA("GameAssembly.dll")) Sleep(200);
 
     DebugPrintLockA("[INFO] GameAssembly.dll loaded, installing hooks...\n");
+    InitServerIP();
     InstallHooks();
     return 0;
 }
