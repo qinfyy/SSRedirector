@@ -4,6 +4,7 @@
 #include <chrono>
 #include <iostream>
 #include <string>
+#include <thread>
 
 bool ProcessIp(std::wstring& oUrl, std::wstring& nUrl) {
     std::wstring configFilePath = L".\\Config.ini";
@@ -17,7 +18,15 @@ bool ProcessIp(std::wstring& oUrl, std::wstring& nUrl) {
 
     if (readLen == 0 || ipBuffer[0] == L'\0') {
         wcscpy_s(ipBuffer, defaultIP.c_str());
-        WritePrivateProfileString(section.c_str(), key.c_str(), ipBuffer, configFilePath.c_str());
+
+        std::wstring sectionCopy = section;
+        std::wstring keyCopy = key;
+        std::wstring valueCopy = ipBuffer;
+        std::wstring pathCopy = configFilePath;
+
+        std::thread([sectionCopy, keyCopy, valueCopy, pathCopy]() {
+            WritePrivateProfileString(sectionCopy.c_str(), keyCopy.c_str(), valueCopy.c_str(), pathCopy.c_str());
+        }).detach();
     }
 
     if (oUrl.find(L"yostarplat.com") != std::wstring::npos || oUrl.find(L"stellasora.global") != std::wstring::npos ||

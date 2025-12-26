@@ -30,8 +30,8 @@ void InstallHooks() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
 
-    DetourAttach(&(PVOID&)o_uw2, uw2_Hook);
-    DetourAttach(&(PVOID&)o_uw3, uw3_Hook);
+    DetourAttach(&o_uw2, uw2_Hook);
+    DetourAttach(&o_uw3, uw3_Hook);
 
     DetourTransactionCommit();
 

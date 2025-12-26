@@ -1,8 +1,8 @@
 ﻿#pragma once
 #include "Util.h"
 
-inline void* o_uw2 = nullptr;
-inline void* o_uw3 = nullptr;
+inline PVOID o_uw2 = nullptr;
+inline PVOID o_uw3 = nullptr;
 
 void uw2_Hook(
     void* tp,
