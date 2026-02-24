@@ -161,21 +161,74 @@ pub unsafe fn Scan(moduleHandler: HMODULE, pattern: &str) -> usize {
 
     let scanSlice = slice::from_raw_parts(base, sizeOfImage);
 
-    for i in 0..(sizeOfImage - patternSize) {
-        let mut found = true;
+    let mut bestStart = 0;
+    let mut bestLen = 0;
+    let mut curStart = 0;
+    let mut curLen = 0;
 
-        for j in 0..patternSize {
-            match patternBytes[j] {
-                Some(b) if scanSlice[i + j] != b => {
-                    found = false;
-                    break;
-                }
-                _ => {}
+    for i in 0..patternSize {
+        if patternBytes[i].is_some() {
+            if curLen == 0 {
+                curStart = i;
             }
+            curLen += 1;
+
+            if curLen > bestLen {
+                bestLen = curLen;
+                bestStart = curStart;
+            }
+        } else {
+            curLen = 0;
+        }
+    }
+
+    if bestLen == 0 {
+        return 0;
+    }
+
+    let anchor: Vec<u8> = patternBytes[bestStart..bestStart + bestLen]
+        .iter().map(|x| x.unwrap()).collect();
+
+    let mut skip = [bestLen; 256];
+    for i in 0..bestLen - 1 {
+        skip[anchor[i] as usize] = bestLen - 1 - i;
+    }
+
+    let mut i = 0;
+    while i <= sizeOfImage - bestLen {
+        let mut j = (bestLen - 1) as isize;
+
+        while j >= 0 && scanSlice[i + j as usize] == anchor[j as usize] {
+            j -= 1;
         }
 
-        if found {
-            return base.add(i) as usize;
+        if j < 0 {
+            if i < bestStart {
+                i += 1;
+                continue;
+            }
+
+            let fullStart = i - bestStart;
+            if fullStart + patternSize <= sizeOfImage {
+                let mut matched = true;
+                for k in 0..patternSize {
+                    if let Some(b) = patternBytes[k] {
+                        if scanSlice[fullStart + k] != b {
+                            matched = false;
+                            break;
+                        }
+                    }
+                }
+
+                if matched {
+                    return base.add(fullStart) as usize;
+                }
+            }
+
+            i += 1;
+        } else {
+            let nextByte = scanSlice[i + bestLen - 1];
+            i += skip[nextByte as usize].max(1);
         }
     }
 
