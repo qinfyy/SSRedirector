@@ -6,12 +6,12 @@ use std::sync::OnceLock;
 use std::fs;
 use ini::Ini;
 use detours_rs::{DetourAttach, DetourTransactionBegin, DetourTransactionCommit, DetourUpdateThread};
-use windows::core::w;
+use windows::core::{w, PCSTR};
 use windows::Win32::Foundation::HMODULE;
-use windows::Win32::System::LibraryLoader::GetModuleHandleW;
+use windows::Win32::System::LibraryLoader::{GetModuleHandleW, LoadLibraryA};
 use windows::Win32::System::Threading::GetCurrentThread;
 use crate::{DebugPrintLock, DebugPrintln};
-use crate::Util::{Scan, Il2CppString, Il2cppToString, CreateIl2CppString, ReplaceIl2CppStringChars};
+use crate::Util::{Scan, Il2CppString, Il2cppToString, CreateIl2CppString, ReplaceIl2CppStringChars, Utf8ToAnsi};
 
 type PVOID = *mut c_void;
 
@@ -22,6 +22,7 @@ type t_u3 = unsafe extern "fastcall" fn(*mut c_void, *mut Il2CppString, *mut c_v
 static mut o_u3: usize = 0;
 
 static ServerIP: OnceLock<String> = OnceLock::new();
+static ExtraDLLs: OnceLock<Vec<String>> = OnceLock::new();
 
 #[allow(unused_variables)]
 pub unsafe extern "system" fn WaitForGAModule(lpParameter: PVOID) -> u32 {
@@ -63,6 +64,15 @@ pub unsafe extern "system" fn WaitForGAModule(lpParameter: PVOID) -> u32 {
     }
 
     DetourTransactionCommit();
+
+    for dllName in ExtraDLLs.get().unwrap() {
+        let dllNameAnsi = Utf8ToAnsi(dllName).unwrap();
+        let handle = LoadLibraryA(PCSTR(dllNameAnsi.as_ptr()));
+        match handle {
+            Ok(_) => { DebugPrintln!("[INFO] Loaded extra DLL: {}", dllName); }
+            Err(e) => { DebugPrintln!("[ERROR] Failed to load extra DLL: {} ({:?})", dllName, e); }
+        }
+    }
 
     0
 }
@@ -139,16 +149,51 @@ fn InitServerIp() {
     }
 
     let mut conf = Ini::load_from_file(configPath).unwrap_or_else(|_| Ini::new());
-    let mainSection = conf.entry(Some("SSRedirector, Made by Cyt".to_string())).or_insert_with(|| ini::Properties::new());
+    let sectionName = "SSRedirector, Made by Cyt";
+    let mut needWrite = false;
 
-    let serverIp = match mainSection.get("ServerIP") {
-        Some(ip) if !ip.is_empty() => ip.to_string(),
+    let serverIpValue = conf.section(Some(sectionName.to_string()))
+        .and_then(|sec| sec.get("ServerIP").map(|s| s.to_string()));
+
+    let extraDllsValue = conf.section(Some(sectionName.to_string()))
+        .and_then(|sec| sec.get("ExtraDLLs").map(|s| s.to_string()));
+
+    let section = conf.entry(Some(sectionName.to_string()))
+        .or_insert_with(|| ini::Properties::new());
+
+    let serverIp = match serverIpValue {
+        Some(ip) if !ip.is_empty() => ip,
         _ => {
-            mainSection.insert("ServerIP".to_string(), defaultIp.to_string());
-            conf.write_to_file(configPath).expect("Failed to write ini");
+            section.insert("ServerIP".to_string(), defaultIp.to_string());
+            needWrite = true;
             defaultIp.to_string()
         }
     };
 
-    ServerIP.set(serverIp).unwrap();
+    ServerIP.set(serverIp).ok();
+
+    let extraDllsStr = match extraDllsValue {
+        Some(val) if !val.is_empty() => {
+            if val.eq_ignore_ascii_case("None") {
+                String::new()
+            } else {
+                val
+            }
+        }
+        _ => {
+            section.insert("ExtraDLLs".to_string(), "None".to_string());
+            needWrite = true;
+            String::new()
+        }
+    };
+
+    let dlls: Vec<String> = extraDllsStr.split(',')
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty()).collect();
+
+    ExtraDLLs.set(dlls).ok();
+
+    if needWrite {
+        conf.write_to_file(configPath).expect("Failed to write ini");
+    }
 }
